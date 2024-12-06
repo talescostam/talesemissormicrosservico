@@ -8,34 +8,18 @@ pipeline {
         }
 
          
-        stage('Verificar Repositório2') {
+        stage('Instalar Dependências') {
             steps {
                 checkout([$class: 'GitSCM', branches: [[name: '*/main']], useRemoteConfigs: [[url: 'https://github.com/talescostam/talesemissormicrosservico.git']]])
             }
         }
-        
-
-
-        stage('Instalar Dependências') {
-            steps {
-                script {
-                     // Atualiza o PATH se necessário
-                    env.PATH = "/usr/bin:$PATH"
-                    // Instalar as dependências Maven antes de compilar o projeto
-                    bat 'mvn clean install'  // Instala as dependências do Maven
-                }
-            }
-        }
 
         stage('Análise SonarQube') {
-            steps {
-                script {
-                    withSonarQubeEnv('SonarQubeServer') {  // 'SonarQubeServer' é o nome da instância configurada no Jenkins
-                        bat 'mvn clean verify sonar:sonar -Dsonar.projectKey=TalesEmissorMicroservico -Dsonar.projectName=TalesEmissorMicroservico'
+                    steps {
+                        checkout([$class: 'GitSCM', branches: [[name: '*/main']], useRemoteConfigs: [[url: 'https://github.com/talescostam/talesemissormicrosservico.git']]])
                     }
                 }
-            }
-        }
+    
 
         stage('Construir Imagem Docker') {
             steps {
