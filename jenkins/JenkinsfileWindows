@@ -1,50 +1,41 @@
 pipeline {
     agent any
-    tools {
-        jdk 'JDK17'
-    }
     stages {
         stage('Verificar Repositório') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/main']], 
-                          useRemoteConfigs: [[url: 'https://github.com/talescostam/talesemissormicrosservico.git']]])
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], useRemoteConfigs: [[url: 'https://github.com/talescostam/talesemissormicrosservico.git']]])
             }
         }
-      
+
         stage('Instalar Dependências') {
             steps {
                 script {
-                    bat '''
-                    echo Instalando dependências...
-                    mvn -version
-                    mvn clean install
-                    '''
+                    // Atualiza o PATH se necessário
+                    env.PATH = "/usr/bin:$PATH"
+                    // Instalar as dependências Maven antes de compilar o projeto
+                    bat 'mvn clean install'  // Instala as dependências do Maven
                 }
             }
         }
-        
+
         stage('Análise SonarQube') {
             steps {
                 script {
-                    withSonarQubeEnv('SonarQubeServer') {
-                        bat '''
-                        echo Executando análise SonarQube...
-                        mvn sonar:sonar -Dsonar.projectKey=TalesEmissorMicroservico -Dsonar.projectName=TalesEmissorMicroservico
-                        '''
+                    withSonarQubeEnv('SonarQubeServer') {  // 'SonarQubeServer' é o nome da instância configurada no Jenkins
+                        bat 'mvn clean verify sonar:sonar -Dsonar.projectKey=TalesEmissorMicroservico -Dsonar.projectName=TalesEmissorMicroservico'
                     }
                 }
             }
         }
-        
+
         stage('Construir Imagem Docker') {
             steps {
                 script {
                     def appName = 'TalesEmissorMicroservico'
                     def imageTag = "${appName}:${env.BUILD_ID}"
-                    bat '''
-                    echo Construindo imagem Docker...
-                    docker build -t ${imageTag} .
-                    '''
+
+                    // Construir a imagem Docker
+                    bat "docker build -t ${imageTag} ."
                 }
             }
         }
@@ -52,11 +43,19 @@ pipeline {
         stage('Fazer Deploy') {
             steps {
                 script {
-                    bat '''
-                    echo Fazendo deploy...
-                    docker-compose down || true
-                    docker-compose up -d --build
-                    '''
+                    def appName = 'TalesEmissorMicroservico'
+                    def imageTag = "${appName}:${env.BUILD_ID}"
+
+                    // Parar e remover o container existente, se houver
+            		bat "docker stop ${appName} || exit 0"
+            		bat "docker rm -v ${appName} || exit 0"  // Remover o container e os volumes associados
+
+            		// Parar e remover os containers do mysql e rabbitmq, se estiverem em uso
+            		bat "docker stop rabbitmq || exit 0"
+            		bat "docker rm -v rabbitmq || exit 0"
+
+                    // Executar o novo container
+                    bat "docker-compose up -d --build"
                 }
             }
         }
