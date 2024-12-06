@@ -7,13 +7,13 @@ pipeline {
             }
         }
 
-         stages {
-                stage('Verificar Repositório2') {
-                    steps {
-                        checkout([$class: 'GitSCM', branches: [[name: '*/main']], useRemoteConfigs: [[url: 'https://github.com/talescostam/talesemissormicrosservico.git']]])
-                    }
-                }
+         
+        stage('Verificar Repositório2') {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], useRemoteConfigs: [[url: 'https://github.com/talescostam/talesemissormicrosservico.git']]])
+            }
         }
+        
 
 
         stage('Instalar Dependências') {
