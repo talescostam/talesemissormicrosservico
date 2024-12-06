@@ -1,0 +1,5 @@
+com\senac\TalesEmissorMicroservico\services\ZapService.class
+com\senac\TalesEmissorMicroservico\controller\ZapController.class
+com\senac\TalesEmissorMicroservico\entities\MensagemZap.class
+com\senac\TalesEmissorMicroservico\config\MQConfig.class
+com\senac\TalesEmissorMicroservico\TalesEmissorMicroservicoApplication.class
